@@ -16,11 +16,7 @@ if __name__ == '__main__':
     num_users = 50
 
     create_tables(database_location=database_name)
-
     insert_user_data(num_users)
-
     insert_activity_data(num_activities)
-
     insert_recipe_data(recipes_file)
-
     generate_random_reviews_with_delays(review_count)

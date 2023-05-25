@@ -15,43 +15,42 @@ column_mapping = {
 
 def insert_recipe_data(csv_file, database_location='activity_recommendations.db'):
     # Connect to the database
-    conn = sqlite3.connect(database_location)
-    cursor = conn.cursor()
+    with sqlite3.connect(database_location) as conn:
+        cursor = conn.cursor()
 
-    # Clear the Recipe table
-    cursor.execute('DELETE FROM Recipe')
+        # Clear the Recipe table
+        cursor.execute('DELETE FROM Recipe')
 
-    # Read the CSV file using pandas
-    df = pd.read_csv(csv_file)
+        # Read the CSV file using pandas
+        df = pd.read_csv(csv_file)
 
-    # Get the column names from the CSV file
-    csv_column_names = df.columns.tolist()
+        # Get the column names from the CSV file
+        csv_column_names = df.columns.tolist()
 
-    # Map the CSV column names to the table column names
-    table_column_names = [column_mapping.get(csv_column_name, csv_column_name) for csv_column_name in csv_column_names]
+        # Map the CSV column names to the table column names
+        table_column_names = [column_mapping.get(csv_column_name, csv_column_name) for csv_column_name in csv_column_names]
 
-    # Iterate over each row and insert into the Recipe table
-    for index, row in df.iterrows():
-        # Check if the title is not null
-        if pd.notnull(row['Meals']):
-            # Create a dynamic list of values for the columns in the table
-            values = [row[csv_column_name] for csv_column_name in csv_column_names]
+        # Iterate over each row and insert into the Recipe table
+        for index, row in df.iterrows():
+            # Check if the title is not null
+            if pd.notnull(row['Meals']):
+                # Create a dynamic list of values for the columns in the table
+                values = [row[csv_column_name] for csv_column_name in csv_column_names]
 
-            # Generate placeholders for the SQL query
-            placeholders = ', '.join(['?'] * len(csv_column_names))
+                # Generate placeholders for the SQL query
+                placeholders = ', '.join(['?'] * len(csv_column_names))
 
-            # Prepare the column names for the SQL query
-            column_names_sql = ', '.join(['`' + table_column_name + '`' for table_column_name in table_column_names])
+                # Prepare the column names for the SQL query
+                column_names_sql = ', '.join(['`' + table_column_name + '`' for table_column_name in table_column_names])
 
-            # Execute the SQL query
-            cursor.execute(f'''
-                INSERT INTO Recipe ({column_names_sql})
-                VALUES ({placeholders})
-            ''', values)
+                # Execute the SQL query
+                cursor.execute(f'''
+                    INSERT INTO Recipe ({column_names_sql})
+                    VALUES ({placeholders})
+                ''', values)
 
-    # Commit the changes and close the connection
-    conn.commit()
-    conn.close()
+        # Commit the changes (not necessary here since the connection is opened in a with statement)
+        # conn.commit()
 
 # Example usage
 if __name__ == '__main__':

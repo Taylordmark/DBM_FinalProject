@@ -22,30 +22,29 @@ def generate_creator_id():
 # Function to insert activity data into the Activity table
 def insert_activity_data(num_activities, database_location='activity_recommendations.db'):
     # Connect to the database
-    conn = sqlite3.connect(database_location)
-    cursor = conn.cursor()
+    with sqlite3.connect(database_location) as conn:
+        cursor = conn.cursor()
 
-    # Get the maximum existing ID in the Activity table
-    cursor.execute('SELECT MAX(ID) FROM Activity')
-    result = cursor.fetchone()
-    max_id = result[0] if result[0] else 0
+        # Get the maximum existing ID in the Activity table
+        cursor.execute('SELECT MAX(ID) FROM Activity')
+        result = cursor.fetchone()
+        max_id = result[0] if result[0] else 0
 
-    # Generate and insert activity data
-    for i in range(num_activities):
-        activity_id = max_id + i + 1
-        coordinates_x, coordinates_y = generate_coordinates()
-        title = generate_title()
-        creator_id = generate_creator_id()
+        # Generate and insert activity data
+        for i in range(num_activities):
+            activity_id = max_id + i + 1
+            coordinates_x, coordinates_y = generate_coordinates()
+            title = generate_title()
+            creator_id = generate_creator_id()
 
-        # Execute the SQL query
-        cursor.execute('''
-            INSERT INTO Activity (ID, coordinates_x, coordinates_y, title, creator)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (activity_id, coordinates_x, coordinates_y, title, creator_id))
+            # Execute the SQL query
+            cursor.execute('''
+                INSERT INTO Activity (ID, coordinates_x, coordinates_y, title, creator)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (activity_id, coordinates_x, coordinates_y, title, creator_id))
 
-    # Commit the changes and close the connection
-    conn.commit()
-    conn.close()
+        # Commit the changes (not necessary here since the connection is opened in a with statement)
+        # conn.commit()
 
 # Example usage
 if __name__ == '__main__':

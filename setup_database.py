@@ -9,7 +9,7 @@ from db_make_files.randomize_reviews import generate_random_reviews_with_delays
 
 if __name__ == '__main__':
     
-    database_name = ('activity_recommendations.db')
+    database_name = 'activity_recommendations.db'
     num_activities = 100
     recipes_file = 'db_make_files/Recipes.csv'
     review_count = 100

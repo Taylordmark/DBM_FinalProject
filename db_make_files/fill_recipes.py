@@ -49,8 +49,7 @@ def insert_recipe_data(csv_file, database_location='activity_recommendations.db'
                     VALUES ({placeholders})
                 ''', values)
 
-        # Commit the changes (not necessary here since the connection is opened in a with statement)
-        # conn.commit()
+
 
 # Example usage
 if __name__ == '__main__':

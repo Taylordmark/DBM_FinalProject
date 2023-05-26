@@ -23,6 +23,9 @@ def create_tables(database_location='activity_recommendations.db'):
             )
         ''')
 
+        # Create index on User table
+        cursor.execute('CREATE INDEX idx_user_id ON User (ID)')
+
         # Create the Recipe table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS Recipe (
@@ -66,6 +69,9 @@ def create_tables(database_location='activity_recommendations.db'):
                 FOREIGN KEY (itemID) REFERENCES Activity(ID) ON DELETE CASCADE
             )
         ''')
+
+        # Create index on Review table
+        cursor.execute('CREATE INDEX idx_review_user ON Review (User)')
 
 if __name__ == '__main__':
     create_tables()

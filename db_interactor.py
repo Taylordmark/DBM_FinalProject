@@ -2,13 +2,55 @@ from db_transactions import *
 
 import sqlite3
 
-get_user_reviews(30, database_location='activity_recommendations.db')
+# Pick a user email from the generated DB
+email = 'ayXsvmVE@uiUNy.com'
 
-# get_similar_users(user_id, database_location='activity_recommendations.db')
+# user index can be any value between min and max of User table, but not all will have reviews associated
+
+reviews = get_user_reviews(user_index = 30)
+print(reviews)
+
+# Using the same email as before
+similar_users = get_similar_users(user_id = email)
 
 # correct request types are 'recipe' or 'activity'
-# get_recommendations('ayXsvmVE@uiUNy.com', request_type = 'activity')
-# user_id = 
-# add_new_review(user_id, item_id, class_name, rating, review_text, database_location='activity_recommendations.db')
-# add_new_activity(self)
-# calculate_average_rating(item_id, class_name, database_location='activity_recommendations.db')
+recommendations = get_recommendations(user_email = email, request_type = 'activity')
+
+# Set recipe values for addition to db
+title = 'cookies'
+side_required = None
+dish_type = 'Dessert'
+sauce_required = None
+prep_time = 30
+primary_ingredient = 'flour'
+all_ingredients = 'flour; 3, chocolate chips; 2, baking_powder; 2, eggs; 4'
+directions = "Mix the stuff then make cookie shapes and bake"
+
+# Get recipe addition results
+success, inputted_value = add_new_recipe(title, side_required, sauce_required, dish_type, prep_time, primary_ingredient, all_ingredients,
+                   directions)
+print(success, inputted_value)
+
+# Set activity values for addition to db
+name = 'kayaking'
+x_location = 39.8752694
+y_location = -85.1233838
+
+# Get activity input value results
+success, inputted_value = add_new_activity(name, x_location, y_location, email)
+print(success, inputted_value)               
+
+# Set input values for review addition
+# Class name is 'Recipe' or 'Activity'
+class_name = 'Recipe'
+rating = 4
+review_text = 'This recipe was delicious!'
+success, inputted_data = add_new_review(email, class_name, rating, review_text)
+print(success, inputted_data)
+
+# Set item index to get ratings
+item_index = 30
+class_name = 'Recipe'
+
+average_rating = calculate_average_rating(30, class_name)
+print(average_rating)

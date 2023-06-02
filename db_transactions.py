@@ -17,7 +17,7 @@ def get_user_reviews(user_index, database_location='activity_recommendations.db'
 
     return reviews
 
-def get_similar_users(user_id, database_location):
+def get_similar_users(user_id, database_location='activity_recommendations.db'):
     # Connect to the database
     with sqlite3.connect(database_location) as conn:
         cursor = conn.cursor()
@@ -119,47 +119,53 @@ def create_new_user(email, name, age, city, zipcode, interest, database_location
             VALUES (?, ?, ?, ?, ?, ?)
         ''', (email, name, age, city, zipcode, interest))
 
-def add_new_review(user_id, item_id, class_name, rating, review_text, database_location='activity_recommendations.db'):
+def add_new_review(user_id, class_name, rating, review_text, database_location='activity_recommendations.db'):
     """
     Add a new review to the Review table in the database.
 
     Args:
-        composite_id (str): The composite ID of the review.
         user_id (str): The ID of the user who wrote the review.
-        item_id (int): The ID of the item (recipe or activity) being reviewed.
         class_name (str): The class name of the item being reviewed ('Recipe' or 'Activity').
         rating (int): The rating value of the review.
         review_text (str): The text of the review.
         database_location (str): The path to the SQLite database file.
+
+    Returns:
+        tuple: A tuple containing the success status (True or False) and the inputted data.
     """
 
-    composite_id = f"{user_id}_{item_id}_{class_name}"
     # Connect to the database
     with sqlite3.connect(database_location) as conn:
         cursor = conn.cursor()
 
-        # Execute the SQL query to add a new review
-        cursor.execute('''
-            INSERT INTO Review (compositeID, User, itemID, class, ratingValue, ratingText)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (user_id, item_id, class_name, rating, review_text))
+        try:
+            # Get the total number of rows in the Review table
+            cursor.execute('SELECT COUNT(*) FROM Review')
+            total_rows = cursor.fetchone()[0]
 
-def add_new_recipe(self):
-    title = self.recipe_title_entry.get()
-    side_required = self.side_required_entry.get()
-    sauce_required = self.sauce_required_entry.get()
-    dish_type = self.dish_type_entry.get()
-    prep_time = int(self.prep_time_entry.get())
-    primary_ingredient = self.primary_ingredient_entry.get()
-    all_ingredients = self.all_ingredients_entry.get()
-    directions = self.directions_entry.get()
+            # Increment item_id by 1 based on the total number of rows
+            item_id = total_rows + 1
 
-    # Call the add_new_recipe function with the provided inputs
-    add_new_recipe(title, side_required, sauce_required, dish_type, prep_time, primary_ingredient, all_ingredients,
-                   directions)
+            composite_id = f"{user_id}_{item_id}_{class_name}"
 
-    messagebox.showinfo('Success', 'New recipe added successfully.')
+            # Execute the SQL query to add a new review
+            cursor.execute('''
+                INSERT INTO Review (compositeID, User, itemID, class, ratingValue, ratingText)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (composite_id, user_id, item_id, class_name, rating, review_text))
 
+            # Commit the changes to the database
+            conn.commit()
+
+            # Return success status and inputted data
+            return True, (user_id, class_name, rating, review_text)
+
+        except sqlite3.Error:
+            # Return failure status and inputted data
+            return False, (user_id, class_name, rating, review_text)
+
+def add_new_recipe(title, side_required, sauce_required, dish_type, prep_time, primary_ingredient, all_ingredients,
+                   directions, database_location='activity_recommendations.db'):
     """
     Add a new recipe to the Recipe table in the database.
 
@@ -173,51 +179,76 @@ def add_new_recipe(self):
         all_ingredients (str): The list of all ingredients required for the recipe.
         directions (str): The cooking directions for the recipe.
         database_location (str): The path to the SQLite database file.
+
+    Returns:
+        tuple: A tuple containing the success status (True or False) and the inputted data.
     """
     # Connect to the database
     with sqlite3.connect(database_location) as conn:
         cursor = conn.cursor()
 
-        # Execute the SQL query to add a new recipe
-        cursor.execute('''
-            INSERT INTO Recipe (title, sideRequired, sauceRequired, dishType, prepTime, primaryIngredient, allIngredients, directions)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (title, side_required, sauce_required, dish_type, prep_time, primary_ingredient, all_ingredients, directions))
+        try:
+            # Execute the SQL query to add a new recipe
+            cursor.execute('''
+                INSERT INTO Recipe (title, sideRequired, sauceRequired, dishType, prepTime, primaryIngredient, allIngredients, directions)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (title, side_required, sauce_required, dish_type, prep_time, primary_ingredient, all_ingredients, directions))
 
-        # No need to commit changes since the connection is opened in a with statement
+            # Commit the changes to the database
+            conn.commit()
 
-def add_new_activity(self):
-    name = self.activity_name_entry.get()
-    category = self.activity_category_entry.get()
-    location = self.activity_location_entry.get()
-    duration = int(self.activity_duration_entry.get())
-    description = self.activity_description_entry.get()
+            # Return success status and inputted data
+            return True, (title, side_required, sauce_required, dish_type, prep_time, primary_ingredient, all_ingredients, directions)
 
-    # Call the add_new_activity function with the provided inputs
-    add_new_activity(name, category, location, duration, description)
-
-    messagebox.showinfo('Success', 'New activity added successfully.')
-
+        except sqlite3.Error:
+            # Return failure status and inputted data
+            return False, (title, side_required, sauce_required, dish_type, prep_time, primary_ingredient, all_ingredients, directions)
+    
+def add_new_activity(title, x_location, y_location, user_email, database_location='activity_recommendations.db'):
     """
     Add a new activity to the Activity table in the database.
 
     Args:
-        name (str): The name of the activity.
-        category (str): The category of the activity.
-        location (str): The location of the activity.
-        duration (int): The duration of the activity in minutes.
-        description (str): The description of the activity.
+        title (str): The title of the activity.
+        x_location (float): The x-coordinate location of the activity.
+        y_location (float): The y-coordinate location of the activity.
+        user_email (str): The email of the user associated with the activity.
         database_location (str): The path to the SQLite database file.
+
+    Returns:
+        tuple: A tuple containing the success status (True or False) and the inputted data.
     """
     # Connect to the database
     with sqlite3.connect(database_location) as conn:
         cursor = conn.cursor()
 
-        # Execute the SQL query to add a new activity
-        cursor.execute('''
-            INSERT INTO Activity (name, category, location, duration, description)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (name, category, location, duration, description))
+        # Get the number of rows in the Activity table
+        cursor.execute('SELECT COUNT(*) FROM Activity')
+        count = cursor.fetchone()[0]
+
+        # Increment the ID based on the table size
+        ID = count + 1
+
+        # Find the associated user index based on the email
+        cursor.execute('SELECT ROWID FROM User WHERE ID = ?', (user_email,))
+        user_index = cursor.fetchone()[0]
+
+        try:
+            # Execute the SQL query to add a new activity
+            cursor.execute('''
+                INSERT INTO Activity (ID, x_location, y_location, title, creator)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (ID, x_location, y_location, title, user_index))
+
+            # Commit the changes to the database
+            conn.commit()
+
+            # Return success status and inputted data
+            return True, (title, x_location, y_location, user_email)
+
+        except sqlite3.Error:
+            # Return failure status and inputted data
+            return False, (title, x_location, y_location, user_email)
 
 def calculate_average_rating(item_id, class_name, database_location='activity_recommendations.db'):
     # Connect to the database

@@ -17,7 +17,7 @@ def get_user_reviews(user_index, database_location='activity_recommendations.db'
 
     return reviews
 
-def get_similar_users(user_id, database_location='activity_recommendations.db'):
+def get_similar_users(user_id, database_location):
     # Connect to the database
     with sqlite3.connect(database_location) as conn:
         cursor = conn.cursor()
@@ -28,13 +28,13 @@ def get_similar_users(user_id, database_location='activity_recommendations.db'):
         user_age, user_interest, user_city = user_info
 
         # Retrieve similar users based on age, interest, and city
-        cursor.execute('SELECT ID FROM User WHERE Age < ? + 10 AND Age > ? - 10 OR classofInterest = ? OR cityofResidence = ?', 
+        cursor.execute('SELECT ID FROM User WHERE Age < ? + 10 AND Age > ? - 10 AND classofInterest = ? AND cityofResidence = ?', 
                        (user_age, user_age, user_interest, user_city))
         similar_users = cursor.fetchall()
 
     return [user[0] for user in similar_users]
 
-def suggest_activity_and_recipe(user_id, database_location='activity_recommendations.db'):
+def suggest_activity_or_recipe(user_id, request_type, database_location='activity_recommendations.db'):
     # Connect to the database
     with sqlite3.connect(database_location) as conn:
         cursor = conn.cursor()
@@ -42,38 +42,38 @@ def suggest_activity_and_recipe(user_id, database_location='activity_recommendat
         # Get similar users based on age, interest, and city
         similar_users = get_similar_users(user_id, database_location)
 
+        if request_type == 'activity':
         # Retrieve activities and recipes reviewed by similar users
-        cursor.execute('''
-        SELECT itemID FROM Review WHERE User IN ({})
-        '''.format(','.join(['?'] * len(similar_users))), similar_users)
-        
-        reviewed_items = cursor.fetchall()
-
-        # If no reviews found, retrieve items from Activity table
-        if not reviewed_items:
             cursor.execute('''
-            SELECT ID FROM Activity WHERE User IN ({})
+            SELECT itemID FROM Review WHERE User IN ({}) AND class = 'Activity'
+            '''.format(','.join(['?'] * len(similar_users))), similar_users)
+            
+            response = cursor.fetchall()
+
+        else:
+            cursor.execute('''
+            SELECT itemID FROM Review WHERE User IN ({}) AND class = 'Recipe'
             '''.format(','.join(['?'] * len(similar_users))), similar_users)
 
-            reviewed_items = cursor.fetchall()
+            response = cursor.fetchall()
+        
+        random_item = random.choice(response)[0]
 
-        # Randomly suggest an activity and recipe from the reviewed items
-        if reviewed_items:
-            random_item = random.choice(reviewed_items)[0]
-
+        if request_type == 'activity':
             # Get the suggested activity
             cursor.execute('SELECT * FROM Activity WHERE ID = ?', (random_item,))
-            suggested_activity = cursor.fetchone()
+            response = cursor.fetchone()
 
+        else:
             # Get the suggested recipe
             cursor.execute('SELECT * FROM Recipe WHERE ID = ?', (random_item,))
-            suggested_recipe = cursor.fetchone()
+            response = cursor.fetchone()
 
-            return suggested_activity, suggested_recipe
+        return response
 
-    return None, None
+    return None
 
-def get_recommendations(user_email):
+def get_recommendations(user_email, request_type = 'activity'):
     def get_bool_as_string(self):
         if self == 0:
             self = 'No'
@@ -81,21 +81,18 @@ def get_recommendations(user_email):
             self = 'Yes'
         
     user_id = user_email
-    suggested_activity, suggested_recipe = suggest_activity_and_recipe(user_id)
-    if suggested_activity or suggested_recipe:
-        if suggested_activity:
+    response = suggest_activity_or_recipe(user_id, request_type)
+    if response:
+        if request_type=='activity':
             print("Suggested Activities:")
-            active = suggested_activity
-            print(f"Activity: {active[3]}\nLocation: {active[1],active[2]}\n \n ID: {active[0]}, Creator: {active[4]}\n")
-        if suggested_recipe:
+            print(f"Activity: {response[3]}\nLocation: {response[1],response[2]}\n \n ID: {response[0]}, Creator: {response[4]}\n")
+        else:
             print("Suggested Recipes:")
-            r = suggested_recipe 
-            print(f"ID: {r[0]}, Title: {r[1]}, \n Side: {get_bool_as_string(r[2])}, Sauce: {get_bool_as_string(r[3])}, Dish Type: {r[5]}, Prep Time: {r[6]} \n\n \
-                    Primary Ingredient: {r[7]}\n\n\
-                    All Ingredients: {r[8]} \n\n\
-                    Directions: {r[9]} \n \n \
-                    Creator: {r[4]}")
-
+            print(f"ID: {response[0]}, Title: {response[1]}, \n Side: {get_bool_as_string(response[2])}, Sauce: {get_bool_as_string(response[3])}, Dish Type: {response[5]}, Prep Time: {response[6]} \n\n \
+                    Primary Ingredient: {response[7]}\n\n\
+                    All Ingredients: {response[8]} \n\n\
+                    Directions: {response[9]} \n \n \
+                    Creator: {response[4]}")
     else:
         print("No suggestions available.")
 

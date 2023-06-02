@@ -1,5 +1,7 @@
 import sqlite3
 import pandas as pd
+import random
+from pathlib import Path
 
 # Dictionary to map CSV column names to table column names
 column_mapping = {
@@ -10,10 +12,15 @@ column_mapping = {
     'Prep Time': 'prepTime',
     'Main Ingredient': 'primaryIngredient',
     'Addtional Ingredients': 'allIngredients',
-    'Directions': 'directions'
+    'Directions': 'directions',
+    'Creator': 'creator'  # Mapping for the 'Creator' column
 }
 
-def insert_recipe_data(csv_file, database_location='activity_recommendations.db'):
+# Function to generate a random creator ID by selecting a random user ID from the User table
+def generate_creator_id(num_users):
+    return random.randint(1, num_users)
+
+def insert_recipe_data(csv_file, num_users, database_location='activity_recommendations.db'):
     # Connect to the database
     with sqlite3.connect(database_location) as conn:
         cursor = conn.cursor()
@@ -36,12 +43,16 @@ def insert_recipe_data(csv_file, database_location='activity_recommendations.db'
             if pd.notnull(row['Meals']):
                 # Create a dynamic list of values for the columns in the table
                 values = [row[csv_column_name] for csv_column_name in csv_column_names]
+                creator_id = generate_creator_id(num_users)  # Generate a random creator ID
+
+                # Append the creator ID to the values list
+                values.append(creator_id)
 
                 # Generate placeholders for the SQL query
-                placeholders = ', '.join(['?'] * len(csv_column_names))
+                placeholders = ', '.join(['?'] * (len(csv_column_names) + 1))
 
                 # Prepare the column names for the SQL query
-                column_names_sql = ', '.join(['`' + table_column_name + '`' for table_column_name in table_column_names])
+                column_names_sql = ', '.join(['`' + table_column_name + '`' for table_column_name in table_column_names + ['creator']])
 
                 # Execute the SQL query
                 cursor.execute(f'''
@@ -50,8 +61,8 @@ def insert_recipe_data(csv_file, database_location='activity_recommendations.db'
                 ''', values)
 
 
-
 # Example usage
 if __name__ == '__main__':
-    csv_file_path = 'Recipes.csv'
-    insert_recipe_data(csv_file_path)
+    csv_file_path = str(Path('db_make_files/Recipes.csv'))
+    num_users = 5000  # Replace with the actual number of users
+    insert_recipe_data(csv_file_path, num_users)

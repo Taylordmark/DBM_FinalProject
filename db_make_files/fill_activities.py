@@ -16,11 +16,11 @@ def generate_title():
     return random.choice(activities)
 
 # Function to generate a random creator ID by selecting a random user ID from the User table
-def generate_creator_id():
-    return random.randint(1, 50)
+def generate_creator_id(num_users):
+    return random.randint(1, num_users)
 
 # Function to insert activity data into the Activity table
-def insert_activity_data(num_activities, database_location='activity_recommendations.db'):
+def insert_activity_data(num_activities, num_users, database_location='activity_recommendations.db'):
     # Connect to the database
     with sqlite3.connect(database_location) as conn:
         cursor = conn.cursor()
@@ -35,7 +35,7 @@ def insert_activity_data(num_activities, database_location='activity_recommendat
             activity_id = max_id + i + 1
             coordinates_x, coordinates_y = generate_coordinates()
             title = generate_title()
-            creator_id = generate_creator_id()
+            creator_id = generate_creator_id(num_users)
 
             # Execute the SQL query
             cursor.execute('''

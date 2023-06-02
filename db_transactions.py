@@ -119,7 +119,7 @@ def create_new_user(email, name, age, city, zipcode, interest, database_location
             VALUES (?, ?, ?, ?, ?, ?)
         ''', (email, name, age, city, zipcode, interest))
 
-def add_new_review(user_id, class_name, rating, review_text, database_location='activity_recommendations.db'):
+def add_new_review(user_id, item_id, class_name, rating, review_text, database_location='activity_recommendations.db'):
     """
     Add a new review to the Review table in the database.
 
@@ -227,7 +227,7 @@ def add_new_activity(title, x_location, y_location, user_email, database_locatio
         count = cursor.fetchone()[0]
 
         # Increment the ID based on the table size
-        ID = count + 1
+        ID_count = count + 1
 
         # Find the associated user index based on the email
         cursor.execute('SELECT ROWID FROM User WHERE ID = ?', (user_email,))
@@ -236,19 +236,19 @@ def add_new_activity(title, x_location, y_location, user_email, database_locatio
         try:
             # Execute the SQL query to add a new activity
             cursor.execute('''
-                INSERT INTO Activity (ID, x_location, y_location, title, creator)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (ID, x_location, y_location, title, user_index))
+                INSERT INTO Activity (coordinates_x, coordinates_y, title, creator)
+                VALUES (?, ?, ?, ?)
+            ''', (x_location, y_location, title, user_index))
 
             # Commit the changes to the database
             conn.commit()
 
             # Return success status and inputted data
-            return True, (title, x_location, y_location, user_email)
+            return True, (x_location, y_location, title, user_index)
 
         except sqlite3.Error:
             # Return failure status and inputted data
-            return False, (title, x_location, y_location, user_email)
+            return False, (x_location, y_location, title, user_index)
 
 def calculate_average_rating(item_id, class_name, database_location='activity_recommendations.db'):
     # Connect to the database

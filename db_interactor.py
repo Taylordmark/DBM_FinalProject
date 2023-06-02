@@ -5,17 +5,20 @@ import sqlite3
 # Pick a user email from the generated DB
 email = 'ayXsvmVE@uiUNy.com'
 
+# Get Reviews
 # user index can be any value between min and max of User table, but not all will have reviews associated
-
 reviews = get_user_reviews(user_index = 30)
 print(reviews)
 
+# Get Similar Users
 # Using the same email as before
 similar_users = get_similar_users(user_id = email)
 
+# Get User Recommendations
 # correct request types are 'recipe' or 'activity'
 recommendations = get_recommendations(user_email = email, request_type = 'activity')
 
+# Add New Recipe
 # Set recipe values for addition to db
 title = 'cookies'
 side_required = None
@@ -31,6 +34,7 @@ success, inputted_value = add_new_recipe(title, side_required, sauce_required, d
                    directions)
 print(success, inputted_value)
 
+# Add New Activity
 # Set activity values for addition to db
 name = 'kayaking'
 x_location = 39.8752694
@@ -40,12 +44,14 @@ y_location = -85.1233838
 success, inputted_value = add_new_activity(name, x_location, y_location, email)
 print(success, inputted_value)               
 
+# Add New Review
 # Set input values for review addition
 # Class name is 'Recipe' or 'Activity'
 class_name = 'Recipe'
 rating = 4
+item_id = 20
 review_text = 'This recipe was delicious!'
-success, inputted_data = add_new_review(email, class_name, rating, review_text)
+success, inputted_data = add_new_review(email, item_id, class_name, rating, review_text)
 print(success, inputted_data)
 
 # Set item index to get ratings
